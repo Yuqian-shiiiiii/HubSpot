@@ -1,27 +1,74 @@
-with availability_block as (
+-- update to incremental model
+
+
+
+WITH available_consecutive_dates as (
    select
        listing_id
        , calendar_date
-       , rank() over (partition by listing_id order by calendar_date) as date_rank
-       , dateadd(day,-date_rank+1,calendar_date) as availability_block_start_date
-       , rank() over (partition by listing_id order by calendar_date desc) as date_rank_desc
-       , dateadd(day,date_rank_desc,calendar_date) as availability_block_end_date
+       , is_available
+       , case
+           when lag(calendar_date) over (partition by listing_id order by calendar_date) is null then calendar_date
+           when datediff('day', lag(calendar_date) over (partition by listing_id order by calendar_date),calendar_date) > 1 then calendar_date
+           else null
+       end as block_start_flag
+       , case
+           when lag(calendar_date) over (partition by listing_id order by calendar_date desc) is null then calendar_date
+           when datediff('day', lag(calendar_date) over (partition by listing_id order by calendar_date desc),calendar_date) < -1 then calendar_date
+           else null
+       end as block_end_flag
    from {{ref('int_rental_listing_calendar')}}
-   where is_available = true
+   where reservation_id is null
 )
 
 
-, booking_block as (
+, booked_consecutive_dates as (
    select
        listing_id
        , calendar_date
-       , rank() over (partition by listing_id order by calendar_date) as date_rank
-       , dateadd(day,-date_rank+1,calendar_date) as booking_block_start_date
-       , rank() over (partition by listing_id order by calendar_date desc) as date_rank_desc
-       , dateadd(day,date_rank_desc,calendar_date) as booking_block_end_date
+       , is_available
+       , case
+           when lag(calendar_date) over (partition by listing_id order by calendar_date) is null then calendar_date
+           when datediff('day', lag(calendar_date) over (partition by listing_id order by calendar_date),calendar_date) > 1 then calendar_date
+           else null
+       end as block_start_flag
+       , case
+           when lag(calendar_date) over (partition by listing_id order by calendar_date desc) is null then calendar_date
+           when datediff('day', lag(calendar_date) over (partition by listing_id order by calendar_date desc),calendar_date) < -1 then calendar_date
+           else null
+       end as block_end_flag
    from {{ref('int_rental_listing_calendar')}}
-   where is_available = false
+   where reservation_id is not null
 )
+
+
+, blocks as (
+   select
+       listing_id
+       , calendar_date
+       , is_available
+       -- Carry forward the last block start date for each group of consecutive dates
+       , coalesce(block_start_flag, max(block_start_flag) over (partition by listing_id order by calendar_date rows between unbounded preceding and current row)) as block_start_date
+       , coalesce(block_end_flag, min(block_end_flag) over (partition by listing_id order by calendar_date desc rows between unbounded preceding and current row)) as block_end_date
+   from available_consecutive_dates
+
+
+   union
+
+
+   select
+       listing_id
+       , calendar_date
+       , is_available
+       -- Carry forward the last block start date for each group of consecutive dates
+       , coalesce(block_start_flag, max(block_start_flag) over (partition by listing_id order by calendar_date rows between unbounded preceding and current row)) as block_start_date
+       , coalesce(block_end_flag, min(block_end_flag) over (partition by listing_id order by calendar_date desc rows between unbounded preceding and current row)) as block_end_date
+   from booked_consecutive_dates
+
+
+)
+
+
 
 
 select
@@ -35,9 +82,9 @@ select
    , listing_calendar.maximum_nights
 
 
-   , coalesce(availability_block.availability_block_start_date, booking_block.booking_block_start_date) as block_start_date
-   , coalesce(availability_block.availability_block_end_date, booking_block.booking_block_end_date) as block_end_date
-   , datediff('day',block_end_date, block_start_date) as block_length
+   , block_start_date
+   , block_end_date
+   , datediff('day', block_start_date,block_end_date)+1 as block_length
 
 
    , listing_calendar.neighborhood
@@ -55,10 +102,12 @@ select
    , listing_calendar.has_air_conditioning
    , listing_calendar.has_elevator
    , listing_calendar.has_free_parking
+   , listing_calendar.has_first_aid_kit
 
 
 from {{ref('int_rental_listing_calendar')}} listing_calendar
-left join availability_block
-   on listing_calendar.listing_id = availability_block.listing_id and listing_calendar.calendar_date = availability_block.calendar_date
-left join booking_block
-   on listing_calendar.listing_id = booking_block.listing_id and listing_calendar.calendar_date = booking_block.calendar_date
+left join blocks
+   on listing_calendar.listing_id = blocks.listing_id and listing_calendar.calendar_date = blocks.calendar_date
+
+
+
