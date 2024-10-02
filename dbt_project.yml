@@ -1,0 +1,94 @@
+# pseudocode
+
+
+name: "analytics_data_warehouse"
+version: "1.0.0"
+config-version: 2
+
+
+# These configurations specify where dbt should look for different types of files.
+# The `model-paths` config, for example, states that models in this project can be
+# found in the "models/" directory.
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+docs-paths: ["docs"]
+asset-paths: ["assets"]
+
+
+
+
+
+
+models:
+
+
+ analytics_data_warehouse:
+
+
+   # default settings for all models
+   +materialized: view
+   +incremental_strategy: "delete+insert"
+
+
+   # etl model configurations to be used
+   # internally and for troubleshooting
+   staging:
+     +meta:
+       owner: "@analytics"
+     +schema: _etl
+     +grants:
+       select: ["data_scientist"]
+
+
+   intermediate:
+     +meta:
+       owner: "@analytics"
+     +schema: _etl
+     +grants:
+       select: ["data_scientist"]
+
+
+
+
+   # end state model configurations to be used
+   # by stakeholders
+
+
+   marts:
+     +materialized: table
+
+
+     rental_customer_stays:
+       +meta:
+         owner: "@analytics"
+       +schema: rental_customer_stays
+       +tags: [nightly] # none of this needs to run more than nightly
+
+
+     rental_listing_analytics:
+       +meta:
+         owner: "@analytics"
+       +schema: rental_listing_analytics
+       +tags: ["nightly"]
+
+
+     rental_rev_ops:
+       +meta:
+         owner: "@analytics"
+       +schema: rental_rev_ops
+       +tags: ["nightly"]
+
+
+tests:
+ dbt_project_evaluator:
+   +severity: "{{ env_var('DBT_PROJECT_EVALUATOR_SEVERITY', 'warn') }}"
+
+
+seeds:
+
+
+snapshots:
