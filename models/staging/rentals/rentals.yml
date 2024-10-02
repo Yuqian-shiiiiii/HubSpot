@@ -1,0 +1,44 @@
+version: 2
+
+
+sources:
+ - name: rentals
+   database: analytics
+   schema: _etl
+   description: >
+     The source data includes comprehensive information about our property listings and is supplied through our rental platform datashare.
+   tables:
+     - name: rental_amenities_change_log
+       description: >
+         Listing amenities change log.
+       # the following analytics data sources should be refreshed daily.
+       # The freshness test will trigger a error if the data source has not been updated for 2 days in case of data lag.
+       freshness:
+         error_after:
+           count: 2
+           period: day
+        
+     - name: rental_calendar
+       description: >
+         Listing reservations and prices through date 2021-07-12 to 2022-01-11
+       freshness:
+         error_after:
+           count: 2
+           period: day
+        
+     - name: rental_generated_reviews 
+       description: >
+         Listing reviews data with review score and date.
+       freshness:
+         error_after:
+           count: 2
+           period: day
+
+
+     - name: rental_listings
+       description: >
+         Current Listings data
+       freshness:
+         error_after:
+           count: 2
+           period: day

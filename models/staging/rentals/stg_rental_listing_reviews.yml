@@ -1,0 +1,33 @@
+version: 2
+
+
+models:
+ - name: stg_rental_listing_reviews
+   description: >
+     Rental listing reviews received from AA rental
+   columns:
+     - name: review_id
+       description: INTEGER Auto-incrementing ID for the reviews data
+       tests:
+         - not_null
+         - unique
+
+
+     - name: listing_id
+       description: INT ID for the listing which this review applies to
+       tests:
+         - not_null
+
+
+     - name: review_score
+       description: INTEGER Generated score of the review, integer 1 to 5
+       tests:
+         - not_null
+         - accepted_values:
+             values: [1, 2, 3, 4, 5]
+
+
+     - name: review_date
+       description: DATE of the review
+       tests:
+         - not_null

@@ -1,0 +1,105 @@
+version: 2
+
+
+models:
+ - name: stg_rental_listings
+   description: >
+     Current active listings with property and host details
+   columns:
+     - name: listing_id
+       description: INT ID for the listing
+       tests:
+         - not_null
+         - unique
+
+
+     - name: listing_name
+       description: VARCHAR display name of listing
+       tests:
+         - not_null
+
+
+     - name: host_id
+       description: INTEGER ID for the Host who owns this
+       tests:
+         - not_null
+
+
+     - name: host_name
+       description: VARCHAR display name of Host
+       tests:
+         - not_null
+
+
+     - name: host_since
+       description: DATE when the Host signed up
+       tests:
+         - not_null
+
+
+     - name: host_location
+       description: Array of methods the Host can use to verify
+
+
+     - name: neighborhood
+       description: VARCHAR The neighborhood where this listing is located
+
+
+     - name: property_type
+       description: VARCHAR Description of the type of property
+       tests:
+         - not_null
+         - accepted_values:
+           # confirm logic with business
+             values: ["Boat", "Entire apartment", "Entire condominium", "Entire guest suite", "Entire home/apt", "Entire house", "Entire loft", "Entire townhouse",
+                 "Private room in apartment", "Private room in condominium", "Private room in house", "Private room in townhouse"]
+
+
+     - name: room_type
+       description: VARCHAR Description of the type of room
+       tests:
+         - not_null
+         - accepted_values:
+             values: ["Entire home/apt", "Private room"]
+      
+     - name: accommodates
+       description: INTEGER Number of guests this room can accomodate
+
+
+     - name: bathrooms_text
+       description: VARCHAR Number and types of bathrooms available
+
+
+     - name: number_of_bedrooms
+       description: INT Number of bedrooms available for use
+
+
+     - name: number_of_beds
+       description: INT Number of bed available for use
+
+
+     # cross checked using the amentities changelog
+     # potentially set up test or use changelog as SoT
+     - name: amenities
+       description: Array of most updated amenities available for guests
+
+
+     # cross checked using the most recent price in the calendar table
+     - name: current_listing_price
+       description: The current price of this listing
+
+
+     - name: first_review_date
+       description: DATE of the first review this listing received
+
+
+     - name: last_review_date
+       description: DATE of the most recent review this listing received
+    
+     # will exclude in int
+     - name: system_scores_rating
+       description: VARCHAR average review score of the listing received from aa rental.
+               This data does not align with the stg_rental_listing_reviews score.
+               Need to confirm.
+     
+

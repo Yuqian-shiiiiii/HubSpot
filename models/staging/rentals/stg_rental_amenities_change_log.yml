@@ -1,0 +1,32 @@
+
+version: 2
+
+
+models:
+ - name: stg_rental_amenities_change_log
+   description: >
+     Change log of rental listing amenities received from rental platform
+   columns:
+     - name: change_log_id
+       description: Generated/surrogate id for amenities change log, PRIMARY key
+       tests:
+         - not_null
+         - unique
+
+
+     - name: listing_id
+       description: INT ID for the listing to this which this change applies
+       tests:
+         - not_null
+
+
+     - name: changed_at
+       description: Date when the amenities list changed
+       tests:
+         - not_null
+
+
+     - name: amenities
+       description: Array of the amenities available as of the change
+       tests:
+         - not_null

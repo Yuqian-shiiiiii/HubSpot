@@ -1,0 +1,55 @@
+
+version: 2
+
+
+models:
+ - name: stg_rental_calendar
+   description: >
+     Calendar shows avaialbility, reservation, price for each listing next year from today 07/11/2021
+     (from 07/12/2021 - 07/11/2022)
+   columns:
+  
+     - name: calendar_listing_id
+       description: Surrogate PK of listing_id and the date
+       tests:
+         - not_null
+         - unique
+
+
+     - name: calendar_date
+       description: DATE for the next year, part of the PK
+       tests:
+         - not_null
+
+
+     - name: listing_id
+       description: INT ID for the listing, part of the PK
+       tests:
+         - not_null
+
+
+     - name: is_available
+       description: Boolean value indicating if the listing is avaialble on that calendar_date
+                 In source data, ‘t’ if this property is available, 'f' is not avaialble
+       tests:
+         - not_null
+         - accepted_values:
+             values: ['t','f']
+    
+     - name: reservation_id
+       description: INT ID for the reservation for the listing ona specific day. Foreign key.
+
+
+     - name: price
+       description: INTEGER price in USD to book this property on DATE.
+       tests:
+         - not_null
+
+
+     - name: minimum_nights
+       description: INTEGER The minimum number of nights that must be booked consecutively for this property.
+                   # Need to confirm
+
+
+     - name: maximum_nights
+       description: INTEGER The maximum number of nights that must be booked consecutively for this property.
