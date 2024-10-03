@@ -15,7 +15,7 @@ select
    , total_bookings / total_available as book_rate
    , avg(booking_price) as avg_book_price
    , sum(upcoming_revenue ) as total_upcoming_revenue
-   , avg(avg_review_score) avg_review_score_across_listings
+   , avg(avg_review_score) as avg_review_score_across_listings
 from
    daily_listing_calendar
 group by 1,2
