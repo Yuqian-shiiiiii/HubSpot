@@ -7,7 +7,8 @@ WITH available_consecutive_dates as (
        listing_id
        , calendar_date
        , is_available
-       , case
+       -- sorting listing by day aesc and substract from the date
+       -- if the difference is greater than 1 or null
            when lag(calendar_date) over (partition by listing_id order by calendar_date) is null then calendar_date
            when datediff('day', lag(calendar_date) over (partition by listing_id order by calendar_date),calendar_date) > 1 then calendar_date
            else null
